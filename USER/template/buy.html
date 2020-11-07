@@ -1,0 +1,175 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+
+<div class="card mb-3" style="margin-top: 20px;">
+  <div class="card-header">
+    <i class="fas fa-bank"></i>
+    Add coin</div>
+    <div class="card-body">
+        <form id="buy_coin_form" method="POST" action="">
+            <div class="form-group" hidden>
+              <div class="form-label-group">
+                <input type="text" id="my_public_key" name="my_public_key" class="form-control" placeholder="Public Key" required="required" autofocus="autofocus" value={{session.get('public_key')}} readonly>
+                <label for="my_public_key">Public key</label>
+              </div>
+            </div>
+
+            <select id="bpsc_url" class="custom-select mb-3">
+                <option selected value="0">Choose a Token </option>
+                <option value="http://127.0.0.1:5000">Token 01</option>
+                <option value="http://127.0.0.1:5001">Token 02</option>
+            </select>
+
+            <div class="form-group">
+              <div class="form-label-group">
+                <input type="text" id="my_private_key" name="my_private_key" class="form-control" placeholder="Private Key" required="required" autofocus="autofocus" >
+                <label for="my_private_key">Private key</label>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="input-group">
+                  <div class="custom-file">
+                    <label class="custom-file-label" for="file" style="overflow: hidden;">Choose private key qrcode</label>
+                    <input type="file" class="custom-file-input" id="file" aria-describedby="file">
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <button type="button" class="btn default" onclick="qr_scan()" >
+                    <i class="fas fa-qrcode" style='font-size:20px'> scan</i>
+                </button>
+              </div>
+            </div>
+            <br>
+            <div class="form-group">
+              <div class="form-label-group">
+                <input type="text" id="amount" name="amount" class="form-control" placeholder="Amount" required="required" autofocus="autofocus" >
+                <label for="amount">Amount</label>
+              </div>
+            </div>
+            <p id="invalid_form" style="color:red"></p>
+            <p id="invalid_private_key" style="color:red"></p>
+            <div class="row">
+                <div class="col-12 text-center"  >
+                    <input type="button" name="buy_coin" id="buy_coin" class="button button-secondary button-shadow" value="ADD COIN" >
+                </div>
+            </div>
+          </form>
+    </div>
+  </div>
+
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript" src="/static/js/qrredaer/qrreaderbuy.js"></script>
+<script>
+      $(function(){
+           $("#buy_coin").click(function () {
+              $.ajax({
+                   url: "/buy_coin",
+                   type: "POST",
+                   dataType : 'json',
+                   data: $('#buy_coin_form').serialize(),
+                   success: function(response){
+
+                      document.getElementById("invalid_private_key").innerHTML = "";
+                      document.getElementById("invalid_form").innerHTML = "";
+                      if (response["BuyForm"] == true){
+                            if (response["key_verify"] == true){
+                                if(document.getElementById("bpsc_url").value== '0'){
+                                    document.getElementById("invalid_form").innerHTML = "Choose token type.";
+                                }
+                                else{
+                                  document.getElementById("buy_sender_public_key").value = response["transaction"]["sender_public_key"];
+                                  document.getElementById("buy_recipient_public_key").value = response["transaction"]["recipient_public_key"];
+                                  document.getElementById("buy_amount").value = response["transaction"]["amount"];
+                                  document.getElementById("buy_signature").value = response["signature"];
+                                  $("#buy_coin_modal").modal('show');
+                                }
+                            }
+                            else{
+                                document.getElementById("invalid_private_key").innerHTML = "Invalid private key.";
+                            }
+                       }
+                       else{
+                            document.getElementById("invalid_form").innerHTML = "Check the Form and complete again.";
+                       }
+                    },
+                    error: function(error){
+                        console.log(error);
+                    }
+               });
+            });
+
+            $("#button_buy_transaction").click(function () {
+                //console.log($(&apos;#confirmation_transaction_form&apos;).serialize());
+                $.ajax({
+                      url: document.getElementById("bpsc_url").value + "/add_coin",
+                      type: "POST",
+                      dataType : 'json',
+                      data: $('#confirmation_buy_form').serialize(),
+                      success: function(response){
+                            document.getElementById("add_value").innerHTML =document.getElementById("buy_amount").value;
+                            $("#buy_coin_form")[0].reset();
+                            $("#confirmation_buy_form")[0].reset();
+                            $("#my_private_key").val("");
+                            $("#amount").val("");
+                            $("#buy_coin_modal").modal('hide');
+                            $("#buy_modal").modal('show');
+
+                      },
+                      error: function(error){
+                        console.log(error);
+                      }
+                });
+            });
+
+      });
+    </script>
+    <script>
+        function qr_scan() {
+            var scanner = new Instascan.Scanner({ video: document.getElementById('preview'), scanPeriod: 5, mirror: false });
+            scanner.addListener('scan',function(content){
+                scanner.stop();
+                document.getElementById("my_private_key").value = content;
+                $("#qr_scan_Modal").modal('hide');
+            });
+            Instascan.Camera.getCameras().then(function (cameras){
+                if(cameras.length>0){
+                    scanner.start(cameras[0]);
+                    $('[name="options"]').on('change',function(){
+                        if($(this).val()==1){
+                            if(cameras[0]!=""){
+                                scanner.start(cameras[0]);
+                            }else{
+                                alert('No Front camera found!');
+                            }
+                        }else if($(this).val()==2){
+                            if(cameras[1]!=""){
+                                scanner.start(cameras[1]);
+                            }else{
+                                alert('No Back camera found!');
+                            }
+                        }
+                    });
+                }else{
+                    console.error('No cameras found.');
+                    alert('No cameras found.');
+                    $("#qr_scan_Modal").modal('hide');
+                }
+            }).catch(function(e){
+                console.error(e);
+                alert(e);
+                $("#qr_scan_Modal").modal('hide');
+            });
+            $("#qr_scan_Modal").modal('show');
+            $("#qr_cancel").click(function () {
+                scanner.stop();
+            });
+        }
+	</script>
+
+{% endblock %}

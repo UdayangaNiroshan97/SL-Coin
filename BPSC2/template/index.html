@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>BPSC 02 Frontend</title>
+
+    <link rel="stylesheet" href="/static/vender/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/vender/datatables/dataTables.bootstrap4.css">
+    <link rel="stylesheet" href="/static/css/custom.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css">
+
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a href="#" class="navbar-brand">Node Frontend</a>
+        </div>
+    </nav>
+
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="card-body">
+            <h4 class="card-title">This node can retrieve Blockchain data from the following nodes:</h4>
+          </div>
+        </div>
+        <div class="col-lg-12" id="list_nodes">
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                 <div class="card-body">
+                     <h4 class="card-title">Transactions on the Blockchain</h4>
+                 </div>
+            </div>
+         </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header">
+        <i class="fas fa-table"></i>
+        Blockchain
+        <button type="submit" id="refresh_blockchain" class="btn btn-primary">
+             <i class="fa fa-refresh"></i>
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="table">
+            <table id="transactions_table" class="table table-bordered" cellspacing="0" width="100%" ></table>
+        </div>
+      </div>
+      <div class="card-footer small text-muted"><p>Updated today at <span id="time"></span></p></div>
+    </div>
+
+    <script src="/static/vender/jquery/jquery.min.js"></script>
+    <script src="/static/vender/datatables/jquery.dataTables.js"></script>
+    <script src="/static/js/ellipsis.js"></script>
+
+    <script>
+      var dt = new Date();
+      document.getElementById("time").innerHTML = dt.toLocaleTimeString();
+    </script>
+
+  <script>
+
+      $(function(){
+
+          $.ajax({
+               url: "/chain2",
+               type: 'GET',
+               success: function(response){
+
+                    let transactions = [];
+                    let count = 1;
+
+                    for (i = 1; i < response.length; i++) {
+                          for (j = 0; j < response["chain"][i]["transactions"].length; j++) {
+
+                              let options = {  year: "numeric", month: "short",  day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit"  };
+                              let date = new Date(response["chain"][i]["timestamp"] * 1000);
+                              formattedDateTime = date.toLocaleTimeString("en-us", options);
+
+                              let transaction = [count,
+                                  response["chain"][i]["transactions"][j]["sender_public_key"],
+                                  response["chain"][i]["transactions"][j]["recipient_public_key"],
+                                  response["chain"][i]["transactions"][j]["amount"],
+                                  formattedDateTime,
+                                  response["chain"][i]["block_number"]]
+
+                              transactions.push(transaction);
+                              count += 1;
+                          };
+                    };
+
+              $('#transactions_table').dataTable( {
+                 data: transactions,
+                 columns: [{ title: "#" },
+                           { title: "Sender Public Key"},
+                           { title: "Recipient Public Key"},
+                           { title: "Amount"},
+                           { title: "Timestamp"},
+                           { title: "Block#"}],
+                columnDefs: [ {targets: [1,2,3,4,5], render: $.fn.dataTable.render.ellipsis( 25 )}]
+              } );
+
+          },
+          error: function(error){
+            console.log(error);
+          }
+        });
+
+        $("#refresh_blockchain").click(function () {
+          $.ajax({
+            url: "/nodes/resolve",
+            type: "GET",
+
+            success: function(response){
+              window.location.reload();
+            },
+            error: function(error){
+              console.log(error);
+            }
+          });
+
+        });
+
+      });
+
+
+   </script>
+<script>
+      $(function(){
+        $.ajax({
+          url: "/nodes/get",
+          type: 'GET',
+          success: function(response){
+
+            console.log(response['nodes']);
+            var node = "";
+
+            for (i = 0; i < response['nodes'].length; i++) {
+              //node = "<li>" + response['nodes'][i] + "</li>";
+              node = "<li> <a href=http://" + response['nodes'][i] + ">" + response['nodes'][i] +"</a></li>";
+              document.getElementById("list_nodes").innerHTML += node;
+
+            };
+
+          },
+          error: function(error){
+            console.log(error);
+          }
+        });
+      })
+    </script>
+
+</body>
+</html>

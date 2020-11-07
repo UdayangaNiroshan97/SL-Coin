@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>SLcoin </title>
+    <link rel="shortcut icon" href="/static/img/favicon.ico">
+    <link rel="stylesheet" href="/static/css/custom.css">
+    <link rel="stylesheet" href="/static/vender/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/vender/datatables/dataTables.bootstrap4.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+  </head>
+
+  <body id="page-top">
+
+    <nav class="navbar navbar-expand navbar-dark bg-dark static-top">
+
+      <header>
+          <div class="left_area">
+            <h3>SL <span>coin</span></h3>
+          </div>
+      </header>
+
+      <button class="btn btn-link btn-sm text-white order-1 order-sm-0" id="sidebarToggle" href="">
+        <i class="fas fa-bars" style='font-size:24px'></i>
+      </button>
+
+      <!-- Navbar Search -->
+      <form class="d-none d-md-inline-block form-inline ml-auto mr-0 mr-md-3 my-2 my-md-0">
+        <div class="input-group">
+          <input type="text" class="form-control" placeholder="Search for..." aria-label="Search" aria-describedby="basi
+          c-addon2">
+          <div class="input-group-append">
+            <button class="btn btn-primary" type="button">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <!-- Navbar -->
+      <ul class="navbar-nav ml-auto ml-md-0">
+        <li class="nav-item dropdown no-arrow">
+          <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <i class="fas fa-user-circle fa-fw" style='font-size:24px'></i>
+          </a>
+          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
+            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal" >Logout</a>
+          </div>
+        </li>
+      </ul>
+
+    </nav>
+
+    <div id="wrapper">
+
+      <!-- Sidebar -->
+      <ul class="sidebar navbar-nav">
+        {% if page=='dashboard' %}<li class="nav-item active">{% else %}<li class="nav-item">{% endif %}
+          <a class="nav-link" href="dashboard">
+            <i class="fas fa-fw fa-tachometer-alt" style='font-size:24px'></i>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        {% if page=='buy' %}<li class="nav-item active">{% else %}<li class="nav-item">{% endif %}
+          <a class="nav-link" href="buy">
+            <i class="fas fa-fw fa-coins" style='font-size:24px'></i>
+            <span>Add Coin</span></a>
+        </li>
+        {% if page=='transaction' %}<li class="nav-item active">{% else %}<li class="nav-item">{% endif %}
+          <a class="nav-link" href="transaction">
+            <i class="fas fa-fw fa-table" style='font-size:24px'></i>
+            <span>Send</span></a>
+        </li>
+        {% if page=='backup' %}<li class="nav-item active">{% else %}<li class="nav-item">{% endif %}
+          <a class="nav-link" href="backup">
+            <i class="fas fa-fw fa-window-restore" style='font-size:24px'></i>
+            <span>Recover Key</span></a>
+        </li>
+        {% if page=='recover' %}<li class="nav-item active">{% else %}<li class="nav-item">{% endif %}
+          <a class="nav-link" href="recover">
+            <i class="fas fa-fw fa-sync" style='font-size:24px'></i>
+            <span>Recover account</span></a>
+        </li>
+        {% if page=='about' %}<li class="nav-item active">{% else %}<li class="nav-item">{% endif %}
+          <a class="nav-link" href="about">
+            <i class="fas fa-fw fa-info-circle" style='font-size:24px'></i>
+            <span>About</span></a>
+        </li>
+      </ul>
+
+      <div id="content-wrapper">
+        <div class="container-fluid ">
+
+          {% block body %}
+
+          {% endblock %}
+            </div>
+        </div>
+          <!-- /.content-wrapper -->
+      </div>
+        <!-- /#wrapper -->
+
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded" href="#page-top">
+      <i class="fas fa-angle-up"></i>
+    </a>
+
+    <!-- Logout Modal-->
+    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Ready to Leave {{session.get('name')}}?</h5>
+            <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+          <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+            <a class="btn btn-primary" href="logout">Logout</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- balance Modal-->
+    <div class="modal fade" id="less_balance_Modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header alert alert-warning">
+            <h5 class="modal-title " >Balance not enuff!</h5>
+            <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+          <div class="modal-body">Your account balance is not enuff! Please buy coin and try again.</div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" type="button" data-dismiss="modal">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+    <!-- buy Modal-->
+    <div class="modal fade" id="buy_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header ">
+            <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-success" role="alert">
+              <h4 class="alert-heading">Successful Transaction!</h4>
+              <div style="display: flex; justify-content:left;"><p id="add_value" style=" padding:0 2px;"></p> amount added your account.<p></div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" type="button" data-dismiss="modal">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+        <!-- recover success Modal-->
+    <div class="modal fade" id="success_recover_model" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header ">
+            <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-success" role="alert">
+              <h4 class="alert-heading">Successful Recover Account</h4>
+              <p>Account recover transaction is success.Balance is add your account and delete recover account.</p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" type="button" data-dismiss="modal">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal modal-alert fade" id="basic_modal" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <div class="modal-title col-md-10">Confirm transaction details, enter a blockchain node url and click on "Confirm Transaction" to finalize your transaction.</div>
+            <button type="button" class="close col-md-2" data-dismiss="modal" aria-hidden="true">&times;</button>
+          </div>
+          <div class="modal-body">
+            <form id="confirmation_transaction_form">
+                <div class="row">
+                  <label class="col-sm-12">Sender Public Key:</label>
+                  <div class="col-sm-12">
+                    <input type="text" name="confirmation_sender_public_key" id="confirmation_sender_public_key" rows="2" class="form-control" readonly>
+                  </div>
+                </div>
+                <div class="row">
+                  <label class="col-sm-12">Recipient Public Key:</label>
+                  <div class="col-sm-12">
+                    <input type="text" name="confirmation_recipient_public_key" id="confirmation_recipient_public_key" rows="2" class="form-control" readonly>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <label class="col-sm-12">Amount to Send:</label>
+                  <div class="col-sm-12">
+                    <input type="text" name="confirmation_amount" id="confirmation_amount" rows="2" class="form-control" readonly>
+                  </div>
+                </div>
+                <div class="row">
+                  <label class="col-sm-12">Transaction Signature:</label>
+                  <div class="col-sm-12">
+                    <input type="text" name="transaction_signature" id="transaction_signature" rows="2" class="form-control" readonly>
+                  </div>
+                </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+            <button type="button" id="button_confirm_transaction" class="btn btn-success">Confirm Transaction</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--buy  Modal -->
+    <div class="modal modal-alert fade" id="buy_coin_modal" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <div class="modal-title col-md-10">Confirm BUY COIN details and click on "Confirm Buy" to finalize your transaction.</div>
+            <button type="button" class="close col-md-2" data-dismiss="modal" aria-hidden="true">&times;</button>
+          </div>
+          <div class="modal-body">
+            <form id="confirmation_buy_form">
+                <div class="row">
+                  <label class="col-sm-12">Pay Type:</label>
+                  <div class="col-sm-12">
+                    <input type="text" name="buy_sender_public_key" id="buy_sender_public_key" rows="2" class="form-control" readonly>
+                  </div>
+                </div>
+                <div class="row">
+                  <label class="col-sm-12">Public Key:</label>
+                  <div class="col-sm-12">
+                    <input type="text" name="buy_recipient_public_key" id="buy_recipient_public_key" rows="2" class="form-control" readonly>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <label class="col-sm-12">Amount to Buy:</label>
+                  <div class="col-sm-12">
+                    <input type="text" name="buy_amount" id="buy_amount" rows="2" class="form-control" readonly>
+                  </div>
+                </div>
+                <div class="row">
+                  <label class="col-sm-12">Transaction Signature:</label>
+                  <div class="col-sm-12">
+                    <input type="text" name="buy_signature" id="buy_signature" rows="2" class="form-control" readonly>
+                  </div>
+                </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+            <button type="button" id="button_buy_transaction" class="btn btn-success">Confirm Buy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--account recover  Modal -->
+    <div class="modal modal-alert fade" id="account_recover_modal" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <div class="modal-title col-md-10">Confirm Recover account details and click on "Confirm Recover" to finalize your transaction.</div>
+            <button type="button" class="close col-md-2" data-dismiss="modal" aria-hidden="true">&times;</button>
+          </div>
+          <div class="modal-body">
+            <form id="account_recover_form">
+                <div class="row">
+                  <label class="col-sm-12">Recover account public key</label>
+                  <div class="col-sm-12">
+                    <input type="text" name="recover_public_key" id="recover_public_key" rows="2" class="form-control" readonly>
+                  </div>
+                </div>
+                <div class="row">
+                  <label class="col-sm-12">Public Key:</label>
+                  <div class="col-sm-12">
+                    <input type="text" name="public_key" id="public_key" rows="2" class="form-control" readonly>
+                  </div>
+                </div>
+                <div class="row">
+                  <label class="col-sm-12">Recover account balance</label>
+                  <div class="col-sm-12">
+                    <input type="text" name="recover_balance" id="recover_balance" rows="2" class="form-control" readonly>
+                  </div>
+                </div>
+                <div class="row">
+                  <label class="col-sm-12">Transaction Signature:</label>
+                  <div class="col-sm-12">
+                    <input type="text" name="recover_signature" id="recover_signature" rows="2" class="form-control" readonly>
+                  </div>
+                </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+            <button type="button" id="confirm_recover" class="btn btn-success">Confirm Recover</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal modal-alert fade" id="account_recover_modal2" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <div class="modal-title col-md-10">Confirm Recover account details and click on "Confirm Recover" to finalize your transaction.</div>
+            <button type="button" class="close col-md-2" data-dismiss="modal" aria-hidden="true">&times;</button>
+          </div>
+          <div class="modal-body">
+            <form id="account_recover_form2">
+                <div class="row">
+                  <label class="col-sm-12">Recover account public key</label>
+                  <div class="col-sm-12">
+                    <input type="text" name="recover_public_key" id="recover_public_key2" rows="2" class="form-control" readonly>
+                  </div>
+                </div>
+                <div class="row">
+                  <label class="col-sm-12">Public Key:</label>
+                  <div class="col-sm-12">
+                    <input type="text" name="public_key" id="public_key2" rows="2" class="form-control" readonly>
+                  </div>
+                </div>
+                <div class="row">
+                  <label class="col-sm-12">Recover account balance</label>
+                  <div class="col-sm-12">
+                    <input type="text" name="recover_balance" id="recover_balance2" rows="2" class="form-control" readonly>
+                  </div>
+                </div>
+                <div class="row">
+                  <label class="col-sm-12">Transaction Signature:</label>
+                  <div class="col-sm-12">
+                    <input type="text" name="recover_signature" id="recover_signature2" rows="2" class="form-control" readonly>
+                  </div>
+                </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+            <button type="button" id="confirm_recover2" class="btn btn-success">Confirm Recover</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alert Message for successful transaction -->
+    <div class="modal modal-alert fade" id="success_transaction_modal" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-success" role="alert">
+              <h4 class="alert-heading">Successful Transaction!</h4>
+              <p>You successfully completed your transaction. It will be added to the next block.</p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="button_ok" class="btn btn-success" data-dismiss="modal">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+     <!-- qr Modal-->
+    <div class="modal fade" id="qr_scan_Modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content ">
+          <div class="modal-body text-center" >
+            <video id="preview" style="width:100%;"></video>
+            <div class="btn-group btn-group-toggle mb-5" data-toggle="buttons">
+              <label class="btn btn-primary active">
+                <input type="radio" name="options" value="1" autocomplete="off" checked> Front Camera
+              </label>
+              <label class="btn btn-secondary">
+                <input type="radio" name="options" value="2" autocomplete="off"> Back Camera
+              </label>
+              <button class="btn btn-danger" type="button" data-dismiss="modal" id="qr_cancel" > Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/static/vender/jquery/jquery.min.js"></script>
+    <script src="/static/vender/bootstrap/js/bootstrap.bundle.js"></script>
+    <script src="/static/vender/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/vender/datatables/jquery.dataTables.js"></script>
+    <script src="/static/vender/datatables/dataTables.bootstrap4.js"></script>
+    <script src="/static/vender/jquery/ellipsis.js"></script>
+    <script src="/static/js/custom2.js"></script>
+    <script type="text/javascript" src="/static/static/js/qrreaderbuy.js"></script>
+    <script type="text/javascript" src="/static/static/js/qrreadertxpk.js"></script>
+    <script type="text/javascript" src="/static/static/js/qrreadertxrk.js"></script>
+    <script type="text/javascript" src="/static/static/js/qrreaderbackup.js"></script>
+    <script type="text/javascript" src="/static/static/js/qrreaderrp.js"></script>
+    <script type="text/javascript" src="/static/static/js/qrreaderrpk.js"></script>
+    <script type="text/javascript" src="/static/static/js/qrreaderrpub.js"></script>
+    <script src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <script>
+      $(".custom-file-input").on("change", function() {
+        var fileName = $(this).val().split("\\").pop();
+        $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+      });
+    </script>
+    {% block script %}
+
+    {% endblock %}
+
+  </body>
+</html>

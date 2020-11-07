@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SLcoin</title>
+    <link rel="shortcut icon" href="/static/img/favicon.ico">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/custom.css">
+    <link rel="stylesheet" href="/static/vender/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,400i|PT+Serif:700" rel="stylesheet">
+    <script src="/static/js/index.js"></script>
+</head>
+
+<body class="is-boxed has-animations" style="height: 100%;">
+    <div class="body-wrap boxed-container">
+        <header class="site-header">
+            <div class="container">
+                <div class="site-header-inner">
+                    <div class="brand header-brand">
+                    </div>
+                    <ul class="header-links list-reset m-0">
+                        <li>
+                            <a href="/">Home</a>
+                        </li>
+                        <li>
+                            <a class="button button-sm button-shadow" href="/login">login</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div class="container-sm"><div class="card card-login mx-auto mt-5">
+                <div class="card-header text-center"><h6>REGISTER</h6></div>
+                    <div class="card-body">
+                        <form method="POST" action="">
+                          <div class="form-group">
+                                <div class="form-label-group">
+                                  <input type="text" id="inputUsername" name="username" class="form-control" placeholder="Username" required="required" autofocus="autofocus" value={{request.form.username}}>
+                                  <label for="inputUsername">Username</label>
+                                </div>
+                          </div>
+                          <div class="form-group">
+                            <div class="form-row">
+                              <div class="col-md-6">
+                                <div class="form-label-group">
+                                  <input type="password" id="inputPassword" name="password" class="form-control" placeholder="Password" required="required" autofocus="autofocus" value={{request.form.password}}>
+                                  <label for="inputPassword">Password</label>
+                                </div>
+                              </div>
+                              <div class="col-md-6">
+                                <div class="form-label-group">
+                                  <input type="password" id="confirmPassword" name="confirm" class="form-control" placeholder="Confirm Password" required="required" autofocus="autofocus" value={{request.form.confirm}}>
+                                  <label for="confirmPassword">Confirm Password</label>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                            {% include 'includes/_messages.html' %}
+                          <div class="form-group">
+                            <div class="form-label-group">
+                              <input type="text" id="public_key" name="public_key" class="form-control" placeholder="Public key" required="required" autofocus="autofocus" value="" readonly>
+                              <label for="public_key">Public key</label>
+                            </div>
+                          </div>
+                          <div class="form-group">
+                            <div class="form-label-group">
+                              <input type="text" id="private_key" name="private_key" class="form-control" placeholder="Private key" required="required" autofocus="autofocus" value="" readonly>
+                              <label for="private_key">Private key</label>
+                            </div>
+                          </div>
+                          <button type="button" class="btn" onclick="copy()">
+                              <i class="fas fa-copy" style='font-size:24px'></i>
+                          </button>
+                          <button type="button" class="btn" onclick="generateQRCode()" >
+                              <i class="fas fa-qrcode" style='font-size:24px'></i>
+                          </button>
+                          <br><br>
+                              <input id="generate_key" class="button button-secondary button-shadow " style="width: 100%;" type="button" onclick="enable_button()" value="Generate Key">
+                              <input id="access_key" class="button button-secondary button-shadow " style="width: 100%;" type="submit"  value="Register" hidden>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+      <br><br>
+    </div>
+
+
+    <!-- qr Modal-->
+    <div class="modal fade" id="qr_Modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header alert alert-secondary">
+            <h5 class="modal-title " >Private key</h5>
+            <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+          <div class="modal-body text-center">
+            <canvas id="qr-code" ></canvas>
+          </div>
+          <div class="modal-footer">
+            <a id="download" download="private key.png">
+              <button class="btn btn-primary" type="button" onClick="download()"><i class="fas fa-download"></i> Download</button>
+            </a>
+            <button class="btn btn-danger" type="button" data-dismiss="modal">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--key model-->
+    <div class="modal fade" id="key_Modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header alert alert-warning">
+            <h5 class="modal-title " >Warning</h5>
+            <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            Save your keys secretly.
+            Don't loss or share private key.
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" type="button" data-dismiss="modal">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+    <script src="/static/vender/jquery/jquery.min.js"></script>
+    <script src="/static/vender/bootstrap/js/bootstrap.bundle.js"></script>
+    <script src="/static/vender/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <script>
+        function copy() {
+          var textarea = document.createElement("textarea");
+          textarea.value = document.getElementById("private_key").value;
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand("copy");
+          document.body.removeChild(textarea);
+        }
+    </script>
+    <script>
+        var qr;
+        (function() {
+                    qr = new QRious({
+                    element: document.getElementById('qr-code'),
+                    size: 100,
+                    });
+            })();
+        function generateQRCode() {
+            var qrtext = document.createElement("qrtext");
+            qrtext.value = document.getElementById("private_key").value;
+            qr.set({
+                foreground: 'black',
+                size: 200,
+                value: qrtext.value
+            });
+        $("#qr_Modal").modal('show');
+        }
+	</script>
+    <script>
+      function download() {
+        var download = document.getElementById("download");
+        var image = document.getElementById("qr-code").toDataURL("image/png")
+            .replace("image/png", "image/octet-stream");
+        download.setAttribute("href", image);
+       }
+    </script>
+    <script>
+        $(function(){
+            $('#generate_key').click(function(){
+                $.ajax({
+                    url: '/wallet/new',
+                    type: 'GET',
+                    success: function(response){
+                        document.getElementById("private_key").value = response['private_key'];
+                        document.getElementById("public_key").value = response['public_key'];
+                    },
+                    error: function(error){
+                      console.log(error);
+                    }
+                });
+            });
+        });
+   </script>
+  <script>
+        function enable_button(){
+            document.getElementById("access_key").hidden = false;
+            document.getElementById("generate_key").hidden = true;
+            $("#key_Modal").modal('show');
+        }
+   </script>
+
+</body>
+</html>

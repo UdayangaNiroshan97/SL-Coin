@@ -1,0 +1,318 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+
+{% include 'includes/_messages.html' %}
+
+<div class="card mb-3" style="margin-top: 20px;">
+  <div class="card-header">
+    <i class="fas fa-money-check-alt"></i>
+    Send</div>
+    <div class="card-body">
+        <form id="transaction_form" method="POST" action="">
+            <div class="form-group" hidden>
+              <div class="form-label-group">
+                <input type="text" id="sender_public_key" name="sender_public_key" class="form-control" placeholder="Sender Public Key" required="required" autofocus="autofocus" value={{session.get('public_key')}} readonly>
+                <label for="sender_public_key">Sender Public key</label>
+              </div>
+            </div>
+            <select id="bpsc_url" class="custom-select mb-3">
+                <option selected value="0">Choose a Token </option>
+                <option value="http://127.0.0.1:5000">Token 01</option>
+                <option value="http://127.0.0.1:5001">Token 02</option>
+            </select>
+            <div class="form-group">
+              <div class="form-label-group">
+                <input type="text" id="sender_private_key" name="sender_private_key" class="form-control" placeholder="Sender Private Key" required="required" autofocus="autofocus" >
+                <label for="sender_private_key">Sender Private key</label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="input-group">
+                  <div class="custom-file">
+                    <label class="custom-file-label" for="file2" style="overflow: hidden;">Choose private key qrcode</label>
+                    <input type="file" class="custom-file-input " id="file2" aria-describedby="file">
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <button type="button" class="btn default" onclick="qr_scan()" >
+                    <i class="fas fa-qrcode" style='font-size:20px'> scan</i>
+                </button>
+              </div>
+            </div>
+            <br>
+            <div class="form-group">
+              <div class="form-label-group">
+                <input type="text" id="recipient_public_key" name="recipient_public_key" class="form-control" placeholder="Recipient Public Key" required="required" autofocus="autofocus" >
+                <label for="recipient_public_key">Recipient Public key</label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="input-group">
+                  <div class="custom-file">
+                    <label class="custom-file-label" for="file3" style="overflow: hidden;">Choose recipient qrcode</label>
+                    <input type="file" class="custom-file-input " id="file3" aria-describedby="file">
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <button type="button" class="btn default" onclick="qr_scan2()" >
+                    <i class="fas fa-qrcode" style='font-size:20px'> scan</i>
+                </button>
+              </div>
+            </div>
+            <br>
+            <div class="form-group">
+              <div class="form-label-group">
+                <input type="text" id="amount" name="amount" class="form-control" placeholder="Amount" required="required" autofocus="autofocus" >
+                <label for="amount">Amount</label>
+              </div>
+            </div>
+            <p id="invalid_form" style="color:red"></p>
+            <p id="invalid_private_key" style="color:red"></p>
+            <p id="invalid_public_key" style="color:red"></p>
+            <div class="row">
+                <div class="col-12 text-center">
+                    <input type="button" name="generate_transaction" id="generate_transaction" class="button button-secondary button-shadow" value="Generate Transaction">
+                </div>
+            </div>
+          </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript" src="/static/js/qrredaer/qrreadertxpk.js"></script>
+<script type="text/javascript" src="/static/js/qrredaer/qrreadertxrk.js"></script>
+    <script>
+      $(function(){
+           $("#generate_transaction").click(function () {
+              $.ajax({
+                   url: "/generate/transaction",
+                   type: "POST",
+                   dataType : 'json',
+                   data: $('#transaction_form').serialize(),
+                   success: function(response){
+                      document.getElementById("invalid_public_key").innerHTML = "";
+                      document.getElementById("invalid_private_key").innerHTML = "";
+                      document.getElementById("invalid_form").innerHTML = "";
+                      if (response["TransactionForm"] == true){
+                          if (response["key_verify"] == true){
+                              if (response["recipient_key_verify"] == true){
+
+                                if(document.getElementById("bpsc_url").value== '0'){
+                                    document.getElementById("invalid_form").innerHTML = "Choose token type.";
+                                }
+                                else{
+                                  document.getElementById("confirmation_sender_public_key").value = response["transaction"]["sender_public_key"];
+                                  document.getElementById("confirmation_recipient_public_key").value = response["transaction"]["recipient_public_key"];
+                                  document.getElementById("confirmation_amount").value = response["transaction"]["amount"];
+                                  document.getElementById("transaction_signature").value = response["signature"];
+                                  if (document.getElementById("bpsc_url").value == "http://127.0.0.1:5000" ){
+                                        $.ajax({
+                                            url:"http://127.0.0.1:5002/chain",
+                                            type: 'GET',
+                                            success: function(response){
+                                              console.log(response);
+                                              var transactions = [];
+                                              var account_balance = 0;
+                                              for (i = 1; i < response.length; i++) {
+                                                for (j = 0; j < response["chain"][i]["transactions"].length; j++) {
+                                                    if(response["chain"][i]["transactions"][j]["sender_public_key"] == document.getElementById("sender_public_key").value){
+                                                        account_balance = account_balance - Number(response["chain"][i]["transactions"][j]["amount"])
+                                                    }
+                                                    if(response["chain"][i]["transactions"][j]["recipient_public_key"] == document.getElementById("sender_public_key").value){
+                                                        account_balance = account_balance + Number(response["chain"][i]["transactions"][j]["amount"])
+                                                    }
+                                                };
+                                              };
+                                              if(document.getElementById("amount").value < account_balance){
+                                                    $("#basic_modal").modal('show');
+                                                }
+                                               else{
+                                                    $("#less_balance_Modal").modal('show');
+                                               }
+                                            },
+                                            error: function(error){
+                                              console.log(error);
+                                           }
+                                        });
+                                  }
+
+                                  if (document.getElementById("bpsc_url").value == "http://127.0.0.1:5001" ){
+                                        $.ajax({
+                                            url:"http://127.0.0.1:5002/chain2",
+                                            type: 'GET',
+                                            success: function(response){
+                                              console.log(response);
+                                              var transactions = [];
+                                              var account_balance = 0;
+                                              for (i = 1; i < response.length; i++) {
+                                                for (j = 0; j < response["chain"][i]["transactions"].length; j++) {
+                                                    if(response["chain"][i]["transactions"][j]["sender_public_key"] == document.getElementById("sender_public_key").value){
+                                                        account_balance = account_balance - Number(response["chain"][i]["transactions"][j]["amount"])
+                                                    }
+                                                    if(response["chain"][i]["transactions"][j]["recipient_public_key"] == document.getElementById("sender_public_key").value){
+                                                        account_balance = account_balance + Number(response["chain"][i]["transactions"][j]["amount"])
+                                                    }
+                                                };
+                                              };
+                                              if(document.getElementById("amount").value < account_balance){
+                                                    $("#basic_modal").modal('show');
+                                                }
+                                               else{
+                                                    $("#less_balance_Modal").modal('show');
+                                               }
+                                            },
+                                            error: function(error){
+                                              console.log(error);
+                                           }
+                                        });
+                                  }
+                                }
+
+
+                              }
+                              else{
+                                  document.getElementById("invalid_public_key").innerHTML = "Invalid recipient public key.";
+                              }
+                          }
+                          else{
+                            if (response["recipient_key_verify"] == false){
+                                document.getElementById("invalid_public_key").innerHTML = "Invalid recipient public key.";
+                                document.getElementById("invalid_private_key").innerHTML = "Invalid private key.";
+                            }
+                            else{
+                                document.getElementById("invalid_private_key").innerHTML = "Invalid private key.";
+                            }
+                          }
+                      }
+                       else{
+                            document.getElementById("invalid_form").innerHTML = "Check the Form and complete again.";
+                        }
+                    },
+                    error: function(error){
+                        console.log(error);
+                    }
+               });
+            });
+            $("#button_confirm_transaction").click(function () {
+                //console.log($(&apos;#confirmation_transaction_form&apos;).serialize());
+                $.ajax({
+                      url: document.getElementById("bpsc_url").value + "/transactions/new",
+                      type: "POST",
+                      headers: {'Access-Control-Allow-Origin':'*'},
+                      dataType : 'json',
+                      data: $('#confirmation_transaction_form').serialize(),
+                      success: function(response){
+
+                            $("#transaction_form")[0].reset();
+                            $("#confirmation_transaction_form")[0].reset();
+
+                            $("#sender_private_key").val("");
+                            $("#recipient_public_key").val("");
+                            $("#amount").val("");
+
+                            $("#basic_modal").modal('hide');
+                            $("#success_transaction_modal").modal('show');
+
+
+                      },
+                      error: function(error){
+                        console.log(error);
+                      }
+                });
+            });
+      });
+    </script>
+    <script>
+        function qr_scan() {
+            var scanner = new Instascan.Scanner({ video: document.getElementById('preview'), scanPeriod: 5, mirror: false });
+            scanner.addListener('scan',function(content){
+                scanner.stop();
+                document.getElementById("sender_private_key").value = content;
+                $("#qr_scan_Modal").modal('hide');
+            });
+            Instascan.Camera.getCameras().then(function (cameras){
+                if(cameras.length>0){
+                    scanner.start(cameras[0]);
+                    $('[name="options"]').on('change',function(){
+                        if($(this).val()==1){
+                            if(cameras[0]!=""){
+                                scanner.start(cameras[0]);
+                            }else{
+                                alert('No Front camera found!');
+                            }
+                        }else if($(this).val()==2){
+                            if(cameras[1]!=""){
+                                scanner.start(cameras[1]);
+                            }else{
+                                alert('No Back camera found!');
+                            }
+                        }
+                    });
+                }else{
+                    console.error('No cameras found.');
+                    alert('No cameras found.');
+                    $("#qr_scan_Modal").modal('hide');
+                }
+            }).catch(function(e){
+                console.error(e);
+                alert(e);
+                $("#qr_scan_Modal").modal('hide');
+            });
+            $("#qr_scan_Modal").modal('show');
+            $("#qr_cancel").click(function () {
+                scanner.stop();
+            });
+        }
+	</script>
+    <script>
+        function qr_scan2() {
+            var scanner = new Instascan.Scanner({ video: document.getElementById('preview'), scanPeriod: 5, mirror: false });
+            scanner.addListener('scan',function(content){
+                scanner.stop();
+                document.getElementById("recipient_public_key").value = content;
+                $("#qr_scan_Modal").modal('hide');
+            });
+            Instascan.Camera.getCameras().then(function (cameras){
+                if(cameras.length>0){
+                    scanner.start(cameras[0]);
+                    $('[name="options"]').on('change',function(){
+                        if($(this).val()==1){
+                            if(cameras[0]!=""){
+                                scanner.start(cameras[0]);
+                            }else{
+                                alert('No Front camera found!');
+                            }
+                        }else if($(this).val()==2){
+                            if(cameras[1]!=""){
+                                scanner.start(cameras[1]);
+                            }else{
+                                alert('No Back camera found!');
+                            }
+                        }
+                    });
+                }else{
+                    console.error('No cameras found.');
+                    alert('No cameras found.');
+                    $("#qr_scan_Modal").modal('hide');
+                }
+            }).catch(function(e){
+                console.error(e);
+                alert(e);
+                $("#qr_scan_Modal").modal('hide');
+            });
+            $("#qr_scan_Modal").modal('show');
+            $("#qr_cancel").click(function () {
+                scanner.stop();
+            });
+        }
+	</script>
+
+{% endblock %}

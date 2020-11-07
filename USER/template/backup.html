@@ -1,0 +1,285 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+
+<div class="card mb-3" style="margin-top: 20px;">
+  <div class="card-header">
+    <i class="fas fa-window-restore"></i>
+    Recover key generate</div>
+    <div class="card-body">
+        <div class="alert alert-danger" id="key_issue_alert" role="alert" hidden>
+              <p id="key_issue" style="color:red"></p>
+            </div>
+        <form id="backup_form" method="POST" action="">
+            <div class="form-group" hidden>
+              <div class="form-label-group">
+                <input type="text" id="backup_public_key" name="backup_public_key" class="form-control" placeholder="Public Key" required="required" autofocus="autofocus" value={{session.get('public_key')}} readonly>
+                <label for="backup_public_key">Public key</label>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="form-label-group">
+                <input type="text" id="backup_private_key" name="backup_private_key" class="form-control" placeholder="Private Key" required="required" autofocus="autofocus" >
+                <label for="backup_private_key">Private key</label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="input-group">
+                  <div class="custom-file">
+                    <label class="custom-file-label" for="file4" style="overflow: hidden;">Choose recipient qrcode</label>
+                    <input type="file" class="custom-file-input " id="file4" aria-describedby="file">
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <button type="button" class="btn default" onclick="qr_scan()" >
+                    <i class="fas fa-qrcode" style='font-size:20px'> scan</i>
+                </button>
+              </div>
+            </div>
+            <br>
+            <div class="form-group">
+              <div class="form-label-group">
+                <input type="text" id="backup_key" name="backup_key" class="form-control" placeholder="Recover Key" required="required" autofocus="autofocus" readonly >
+                <label for="backup_key" >Recover key</label>
+              </div>
+            </div>
+            <button type="button" class="btn" onclick="copy()">
+                <i class="fas fa-copy" style='font-size:24px'></i>
+            </button>
+            <button type="button" class="btn" onclick="generateQRCode()" >
+                <i class="fas fa-qrcode" style='font-size:24px'></i>
+            </button>
+            <p id="invalid_form" style="color:red"></p>
+            <p id="invalid_private_key" style="color:red"></p>
+            <div class="row">
+                <div class="col-sm-12 col-md-6 text-center">
+                    <input type="button" name="generate_backup_key" id="generate_backup_key" onclick="enable_button()" class="button button-secondary button-shadow " value="Generate Backup Key">
+                </div>
+                <div class="col-sm-12 col-md-6 text-center">
+                    <input type="button" name="confirm" id="confirm" class="button button-secondary button-shadow " value="Confirm Backup Key" hidden>
+                </div>
+            </div>
+          </form>
+    </div>
+  </div>
+</div>
+
+<!-- qr Modal-->
+    <div class="modal fade" id="qr_Modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content ">
+          <div class="modal-header alert alert-secondary" ><h2>Address</h2>
+            <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+          <div class="modal-body text-center" >
+            <canvas id="qr-code"></canvas>
+          </div>
+          <div class="modal-footer">
+            <a id="download" download="recover key.png">
+              <button class="btn btn-primary" type="button" onClick="download()"><i class="fas fa-download"></i> Download</button>
+            </a>
+            <button class="btn btn-danger" type="button" data-dismiss="modal">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+<!-- recover_key Modal-->
+    <div class="modal fade" id="recover_key" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header alert alert-warning">
+            <h5 class="modal-title " >Warning</h5>
+            <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+          <div class="modal-body">
+              <div class="row text-left">
+                <div class="col-sm-12 col-md-3 icon" >
+                    <img src="/static/img/loss.svg">
+                </div>
+                <div class="col-sm-12 col-md-9 text" style="margin-top:20px">
+                    <h5>Don't loss or share key</h5>
+                    <p>Be careful.it can not be recovered if you lose it.</p>
+                </div>
+            </div>
+              <form id="confirm_recover_key_form">
+                <div class="row">
+                  <div class="col-sm-12">
+                    <input type="text" name="confirm_recover_key" id="confirm_recover_key" rows="2" class="form-control" readonly>
+                    <button type="button"  onclick="copy2()" class="btn" style="margin-top: 5px;">
+                        <i class="fas fa-copy" style='font-size:24px'></i>
+                    </button>
+                  </div>
+                </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" type="button" data-dismiss="modal">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript" src="/static/js/qrredaer/qrreaderbackup.js"></script>
+
+    <script>
+        function copy() {
+          var textarea = document.createElement("textarea");
+          textarea.value = document.getElementById("backup_key").value;
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand("copy");
+          document.body.removeChild(textarea);
+        }
+        function copy2() {
+            var copyText = document.getElementById("confirm_recover_key");
+              copyText.select();
+              document.execCommand("copy");
+              copyText.blur();
+        }
+    </script>
+    <script>
+        var qr;
+        (function() {
+                    qr = new QRious({
+                    element: document.getElementById('qr-code'),
+                    size: 800,
+                    });
+            })();
+        function generateQRCode() {
+            var qrtext = document.createElement("qrtext");
+            qrtext.value = document.getElementById("backup_key").value;
+            qr.set({
+                foreground: 'black',
+                size: 200,
+                value: qrtext.value
+            });
+        $("#qr_Modal").modal('show');
+        }
+	</script>
+    <script>
+      function download() {
+        var download = document.getElementById("download");
+        var image = document.getElementById("qr-code").toDataURL("image/png")
+            .replace("image/png", "image/octet-stream");
+        download.setAttribute("href", image);
+       }
+    </script>
+    <script>
+        $(function(){
+            $('#generate_backup_key').click(function(){
+                $.ajax({
+                    url: '/wallet/new',
+                    type: 'GET',
+                    success: function(response){
+                        document.getElementById("backup_key").value = response['private_key'];
+                    },
+                    error: function(error){
+                      console.log(error);
+                    }
+                });
+            });
+            $('#confirm').click(function(){
+                $.ajax({
+                    url: '/confirm_backup_key',
+                    type: 'POST',
+                    dataType : 'json',
+                    data: $('#backup_form').serialize(),
+                    success: function(response){
+                        if (response["form"] == true){
+                            document.getElementById("invalid_form").innerHTML = "";
+                            if (response["key_issue"] == true){
+                                document.getElementById("key_issue_alert").hidden = true;
+                                document.getElementById("key_issue").innerHTML = "";
+                                if (response["private_key"] == true){
+                                    document.getElementById("invalid_private_key").innerHTML = "";
+                                    document.getElementById("confirm_recover_key").value = document.getElementById("backup_key").value;
+                                    $("#recover_key").modal('show');
+                                    $("#backup_form")[0].reset();
+                                    $("#backup_private_key").val("");
+                                    $("#backup_key").val("");
+                                    document.getElementById("confirm").disabled = true;
+                                }
+                                else{
+                                    document.getElementById("invalid_private_key").innerHTML = "Invalid private key.";
+                                }
+                            }
+                            else{
+                                document.getElementById("key_issue_alert").hidden = false;
+                                document.getElementById("key_issue").innerHTML = "Your account had issued a recover key.";
+                                document.getElementById("confirm").disabled = true;
+                            }
+                        }
+                        else{
+                            document.getElementById("invalid_form").innerHTML = "Check the Form and complete again.";
+                        }
+
+
+                    },
+                    error: function(error){
+                      console.log(error);
+                    }
+                });
+            });
+        });
+   </script>
+
+    <script>
+        function enable_button(){
+            document.getElementById("confirm").hidden = false;
+            document.getElementById("generate_backup_key").hidden = true;
+        }
+   </script>
+
+    <script>
+        function qr_scan() {
+            var scanner = new Instascan.Scanner({ video: document.getElementById('preview'), scanPeriod: 5, mirror: false });
+            scanner.addListener('scan',function(content){
+                scanner.stop();
+                document.getElementById("backup_private_key").value = content;
+                $("#qr_scan_Modal").modal('hide');
+            });
+            Instascan.Camera.getCameras().then(function (cameras){
+                if(cameras.length>0){
+                    scanner.start(cameras[0]);
+                    $('[name="options"]').on('change',function(){
+                        if($(this).val()==1){
+                            if(cameras[0]!=""){
+                                scanner.start(cameras[0]);
+                            }else{
+                                alert('No Front camera found!');
+                            }
+                        }else if($(this).val()==2){
+                            if(cameras[1]!=""){
+                                scanner.start(cameras[1]);
+                            }else{
+                                alert('No Back camera found!');
+                            }
+                        }
+                    });
+                }else{
+                    console.error('No cameras found.');
+                    alert('No cameras found.');
+                    $("#qr_scan_Modal").modal('hide');
+                }
+            }).catch(function(e){
+                console.error(e);
+                alert(e);
+                $("#qr_scan_Modal").modal('hide');
+            });
+            $("#qr_scan_Modal").modal('show');
+            $("#qr_cancel").click(function () {
+                scanner.stop();
+            });
+        }
+	</script>
+
+{% endblock %}

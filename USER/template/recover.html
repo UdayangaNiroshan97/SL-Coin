@@ -1,0 +1,384 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+
+{% include 'includes/_messages.html' %}
+
+<div class="card mb-3" style="margin-top: 20px;">
+  <div class="card-header">
+    <i class="fas fa-sync"></i>
+    Recover Account</div>
+    <div class="card-body">
+        <form id="recover_form" method="POST" action="">
+            <div class="form-group" hidden>
+              <div class="form-label-group">
+                <input type="text" id="new_public_key" name="new_public_key" class="form-control" placeholder="Public Key" required="required" autofocus="autofocus" value={{session.get('public_key')}} readonly>
+                <label for="new_public_key">Public key</label>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="form-label-group">
+                <input type="text" id="new_private_key" name="new_private_key" class="form-control" placeholder="Private Key" required="required" autofocus="autofocus" >
+                <label for="new_private_key">Private key</label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="input-group">
+                  <div class="custom-file">
+                    <label class="custom-file-label" for="file5" style="overflow: hidden;">Choose private key qrcode</label>
+                    <input type="file" class="custom-file-input " id="file5" aria-describedby="file">
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <button type="button" class="btn default" onclick="qr_scan1()" >
+                    <i class="fas fa-qrcode" style='font-size:20px'> scan</i>
+                </button>
+              </div>
+            </div>
+            <br>
+            <div class="form-group">
+              <div class="form-label-group">
+                <input type="text" id="old_public_key" name="old_public_key" class="form-control" placeholder="Recover account Public Key" required="required" autofocus="autofocus" >
+                <label for="old_public_key">Recover account Public key</label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="input-group">
+                  <div class="custom-file">
+                    <label class="custom-file-label" for="file6" style="overflow: hidden;">Choose recover account qrcode</label>
+                    <input type="file" class="custom-file-input " id="file6" aria-describedby="file">
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <button type="button" class="btn default" onclick="qr_scan2()" >
+                    <i class="fas fa-qrcode" style='font-size:20px'> scan</i>
+                </button>
+              </div>
+            </div>
+            <br>
+            <div class="form-group">
+              <div class="form-label-group">
+                <input type="text" id="recover_key" name="recover_key" class="form-control" placeholder="Recover Key" required="required" autofocus="autofocus" >
+                <label for="recover_key">Recover Key</label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="input-group">
+                  <div class="custom-file">
+                    <label class="custom-file-label" for="file7" style="overflow: hidden;">Choose recover key qrcode</label>
+                    <input type="file" class="custom-file-input " id="file7" aria-describedby="file">
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <button type="button" class="btn default" onclick="qr_scan3()" >
+                    <i class="fas fa-qrcode" style='font-size:20px'> scan</i>
+                </button>
+              </div>
+            </div>
+            <br>
+            <div class="form-group">
+              <div class="form-label-group">
+                <input type="text" id="balance" name="balance" class="form-control" required="required" autofocus="autofocus" hidden>
+              </div>
+            </div>
+            <p id="invalid_form" style="color:red"></p>
+            <p id="invalid_private_key" style="color:red"></p>
+            <p id="invalid_public_key" style="color:red"></p>
+            <p id="invalid_recover_key" style="color:red"></p>
+            <div class="row">
+                <div class="col-12 text-center">
+                    <input type="button" name="recover_account" id="recover_account" class="button button-secondary button-shadow " value="Recover Account">
+                </div>
+            </div>
+          </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+
+<script type="text/javascript" src="/static/js/qrredaer/qrreaderrp.js"></script>
+<script type="text/javascript" src="/static/js/qrredaer/qrreaderrpk.js"></script>
+<script type="text/javascript" src="/static/js/qrredaer/qrreaderrpub.js"></script>
+<script>
+    $(function(){
+       $("#recover_account").click(function () {
+            $.ajax({
+                url: "http://127.0.0.1:5002/chain",
+                type: 'GET',
+                success: function(response){
+                  console.log(response);
+                  var account_balance = 0.0;
+                  var transactions = [];
+                  for (i = 1; i < response.length; i++) {
+                    for (j = 0; j < response["chain"][i]["transactions"].length; j++) {
+                        if(response["chain"][i]["transactions"][j]["sender_public_key"] == document.getElementById("old_public_key").value){
+                            account_balance = account_balance - Number(response["chain"][i]["transactions"][j]["amount"])
+                        }
+                        if(response["chain"][i]["transactions"][j]["recipient_public_key"] == document.getElementById("old_public_key").value){
+                            account_balance = account_balance + Number(response["chain"][i]["transactions"][j]["amount"])
+                        }
+                    };
+                  };
+                   document.getElementById("balance").value = account_balance;
+                   $.ajax({
+                       url: "/recover_account",
+                       type: "POST",
+                       dataType : 'json',
+                       data: $('#recover_form').serialize(),
+                       success: function(response){
+                            if (response["recover_form"] == false){
+                                document.getElementById("invalid_form").innerHTML = "Check the Form and complete again.";
+                            }
+                            else{
+                                document.getElementById("invalid_form").innerHTML = "";
+                                if (response["old_public_key"] == false){
+                                    document.getElementById("invalid_public_key").innerHTML = "Invalid recover account public key.";
+                                }
+                                else{
+                                    document.getElementById("invalid_public_key").innerHTML = "";
+                                }
+                                if (response["recoverkey"] == false){
+                                    document.getElementById("invalid_recover_key").innerHTML = "Invalid recover key.";
+                                }
+                                else{
+                                    document.getElementById("invalid_recover_key").innerHTML = "";
+                                }
+                                if (response["privatekey"] == false){
+                                    document.getElementById("invalid_private_key").innerHTML = "Invalid private key.";
+                                }
+                                else{
+                                    document.getElementById("invalid_private_key").innerHTML = "";
+                                }
+                                if (response["privatekey"] == true){
+                                    if (response["old_public_key"] == true){
+                                        if (response["recoverkey"] == true){
+                                              document.getElementById("recover_public_key").value = response["transaction"]["sender_public_key"];
+                                              document.getElementById("public_key").value = response["transaction"]["recipient_public_key"];
+                                              document.getElementById("recover_balance").value = response["transaction"]["amount"];
+                                              document.getElementById("recover_signature").value = response["signature"];
+
+                                              $.ajax({
+                                                    url: "http://127.0.0.1:5002/chain2",
+                                                    type: 'GET',
+                                                    success: function(response){
+                                                      console.log(response);
+                                                      var account_balance2 = 0.0;
+                                                      var transactions = [];
+                                                      for (i = 1; i < response.length; i++) {
+                                                        for (j = 0; j < response["chain"][i]["transactions"].length; j++) {
+                                                            if(response["chain"][i]["transactions"][j]["sender_public_key"] == document.getElementById("old_public_key").value){
+                                                                account_balance2 = account_balance2 - Number(response["chain"][i]["transactions"][j]["amount"])
+                                                            }
+                                                            if(response["chain"][i]["transactions"][j]["recipient_public_key"] == document.getElementById("old_public_key").value){
+                                                                account_balance2 = account_balance2 + Number(response["chain"][i]["transactions"][j]["amount"])
+                                                            }
+                                                        };
+                                                      };
+                                                       document.getElementById("balance").value = account_balance2;
+                                                       $.ajax({
+                                                           url: "/recover_account",
+                                                           type: "POST",
+                                                           dataType : 'json',
+                                                           data: $('#recover_form').serialize(),
+                                                           success: function(response){
+                                                                  document.getElementById("recover_public_key2").value = response["transaction"]["sender_public_key"];
+                                                                  document.getElementById("public_key2").value = response["transaction"]["recipient_public_key"];
+                                                                  document.getElementById("recover_balance2").value = response["transaction"]["amount"];
+                                                                  document.getElementById("recover_signature2").value = response["signature"];
+
+                                                           },
+                                                            error: function(error){
+                                                                console.log(error);
+                                                            }
+                                                       });
+                                                    },
+                                                    error: function(error){
+                                                      console.log(error);
+                                                   }
+                                                });
+                                              $("#account_recover_modal").modal('show');
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        error: function(error){
+                            console.log(error);
+                        }
+                   });
+                },
+                error: function(error){
+                  console.log(error);
+               }
+            });
+
+       });
+       $("#confirm_recover").click(function () {
+                //console.log($(&apos;#confirmation_transaction_form&apos;).serialize());
+                $.ajax({
+                      url:"http://127.0.0.1:5000/add_recover_balance",
+                      type: "POST",
+                      dataType : 'json',
+                      data: $('#account_recover_form').serialize(),
+                      success: function(response){
+
+                        $.ajax({
+                              url: "http://127.0.0.1:5001/add_recover_balance",
+                              type: "POST",
+                              dataType : 'json',
+                              data: $('#account_recover_form2').serialize(),
+                              success: function(response){
+
+                                      $("#account_recover_modal").modal('hide');
+                                      $("#success_recover_model").modal('show');
+                              },
+                              error: function(error){
+                                console.log(error);
+                              }
+                        });
+                      },
+                      error: function(error){
+                        console.log(error);
+                      }
+                });
+
+            });
+    });
+</script>
+    <script>
+        function qr_scan1() {
+            var scanner = new Instascan.Scanner({ video: document.getElementById('preview'), scanPeriod: 5, mirror: false });
+            scanner.addListener('scan',function(content){
+                scanner.stop();
+                document.getElementById("new_private_key").value = content;
+                $("#qr_scan_Modal").modal('hide');
+            });
+            Instascan.Camera.getCameras().then(function (cameras){
+                if(cameras.length>0){
+                    scanner.start(cameras[0]);
+                    $('[name="options"]').on('change',function(){
+                        if($(this).val()==1){
+                            if(cameras[0]!=""){
+                                scanner.start(cameras[0]);
+                            }else{
+                                alert('No Front camera found!');
+                            }
+                        }else if($(this).val()==2){
+                            if(cameras[1]!=""){
+                                scanner.start(cameras[1]);
+                            }else{
+                                alert('No Back camera found!');
+                            }
+                        }
+                    });
+                }else{
+                    console.error('No cameras found.');
+                    alert('No cameras found.');
+                    $("#qr_scan_Modal").modal('hide');
+                }
+            }).catch(function(e){
+                console.error(e);
+                alert(e);
+                $("#qr_scan_Modal").modal('hide');
+            });
+            $("#qr_scan_Modal").modal('show');
+            $("#qr_cancel").click(function () {
+                scanner.stop();
+            });
+        }
+	</script>
+    <script>
+        function qr_scan2() {
+            var scanner = new Instascan.Scanner({ video: document.getElementById('preview'), scanPeriod: 5, mirror: false });
+            scanner.addListener('scan',function(content){
+                scanner.stop();
+                document.getElementById("old_public_key").value = content;
+                $("#qr_scan_Modal").modal('hide');
+            });
+            Instascan.Camera.getCameras().then(function (cameras){
+                if(cameras.length>0){
+                    scanner.start(cameras[0]);
+                    $('[name="options"]').on('change',function(){
+                        if($(this).val()==1){
+                            if(cameras[0]!=""){
+                                scanner.start(cameras[0]);
+                            }else{
+                                alert('No Front camera found!');
+                            }
+                        }else if($(this).val()==2){
+                            if(cameras[1]!=""){
+                                scanner.start(cameras[1]);
+                            }else{
+                                alert('No Back camera found!');
+                            }
+                        }
+                    });
+                }else{
+                    console.error('No cameras found.');
+                    alert('No cameras found.');
+                    $("#qr_scan_Modal").modal('hide');
+                }
+            }).catch(function(e){
+                console.error(e);
+                alert(e);
+                $("#qr_scan_Modal").modal('hide');
+            });
+            $("#qr_scan_Modal").modal('show');
+            $("#qr_cancel").click(function () {
+                scanner.stop();
+            });
+        }
+	</script>
+    <script>
+        function qr_scan3() {
+            var scanner = new Instascan.Scanner({ video: document.getElementById('preview'), scanPeriod: 5, mirror: false });
+            scanner.addListener('scan',function(content){
+                scanner.stop();
+                document.getElementById("recover_key").value = content;
+                $("#qr_scan_Modal").modal('hide');
+            });
+            Instascan.Camera.getCameras().then(function (cameras){
+                if(cameras.length>0){
+                    scanner.start(cameras[0]);
+                    $('[name="options"]').on('change',function(){
+                        if($(this).val()==1){
+                            if(cameras[0]!=""){
+                                scanner.start(cameras[0]);
+                            }else{
+                                alert('No Front camera found!');
+                            }
+                        }else if($(this).val()==2){
+                            if(cameras[1]!=""){
+                                scanner.start(cameras[1]);
+                            }else{
+                                alert('No Back camera found!');
+                            }
+                        }
+                    });
+                }else{
+                    console.error('No cameras found.');
+                    alert('No cameras found.');
+                    $("#qr_scan_Modal").modal('hide');
+                }
+            }).catch(function(e){
+                console.error(e);
+                alert(e);
+                $("#qr_scan_Modal").modal('hide');
+            });
+            $("#qr_scan_Modal").modal('show');
+            $("#qr_cancel").click(function () {
+                scanner.stop();
+            });
+        }
+	</script>
+
+{% endblock %}
